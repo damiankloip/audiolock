@@ -1,0 +1,115 @@
+<?php
+
+/**
+ * Include the Audiolock API request wrapper class.
+ */
+function audiolock_include() {
+  // This will return false if file can't be included for any reason.
+  return module_load_include('inc', 'audiolock', 'audiolock');
+}
+
+/**
+ * Helper function to make Audiolock API reqests.
+ */
+function audiolock_request($method = '', array $params = array()) {
+  audiolock_include();
+  $client = new DrupalAudiolock();
+
+  return $client->request($method, $params);
+}
+
+/**
+ * Implementation of hook_field_info().
+ */
+function audiolock_field_info() {
+  return array(
+    'audiolock' => array(
+      'label' => t('Audiolock'),
+      'description' => t('Audiolock upload field.'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_field_settings().
+ */
+function audiolock_field_settings($op, $field) {
+  switch ($op) {
+    case 'database columns':
+      $columns['track_uid'] = array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'sortable' => TRUE,
+        'views' => TRUE,
+      );
+      $columns['track_name'] = array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'sortable' => TRUE,
+        'views' => TRUE,
+      );
+
+      return $columns;
+    break;
+  }
+
+}
+
+/**
+ * Implementation of hook_widget().
+ *
+ * Attach a single form element to the form.
+ *
+ * CCK core fields only add a stub element and builds
+ * the complete item in #process so reusable elements
+ * created by hook_elements can be plugged into any
+ * module that provides valid $field information.
+ *
+ * Custom widgets that don't care about using hook_elements
+ * can be built out completely at this time.
+ *
+ * If there are multiple values for this field and CCK is
+ * handling multiple values, the content module will call
+ * this function as many times as needed.
+ *
+ * @param $form
+ *   the entire form array,
+ *   $form['#node'] holds node information
+ * @param $form_state
+ *   the form_state,
+ *   $form_state['values'][$field['field_name']]
+ *   holds the field's form values.
+ * @param $field
+ *   the field array
+ * @param $items
+ *   array of default values for this field
+ * @param $delta
+ *   the order of this item in the array of
+ *   subelements (0, 1, 2, etc)
+ *
+ * @return
+ *   the form item for a single element for this field
+ */
+function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) { 
+  $element['file'] = array(
+    '#type' => 'file',
+    '#attributes' => array('class' => 'audiolock-widget'),
+  );
+
+  return $element;
+}
+
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function audiolock_field_formatter_info() {
+  return array(
+    'audiolock_stream_link' => array(
+      'label' => t('Audiolock stream link'),
+      'field types' => array('audiolock'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+    ),
+  );
+}

@@ -1,0 +1,4 @@
+name = Audiolock
+description = Audiolock integration for Drupal
+core = 6.x
+package = Other
