@@ -1,8 +1,5 @@
 <?php
 
-// Notify CCK when this module is enabled, disabled, installed,
-// and uninstalled so CCK can do any necessary preparation or cleanup.
-
 /**
  * @file
  * Implementation of hook_install().

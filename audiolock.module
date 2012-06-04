@@ -35,6 +35,14 @@ function audiolock_field_info() {
  */
 function audiolock_field_settings($op, $field) {
   switch ($op) {
+    case 'form':
+      $form = array();
+      $form['audiolock_example'] = array(
+        '#type' => 'textfield',
+        '#label' => 'This is a test field',
+        '#description' => 'THSJSDk jkjskjd df djhfdjhf',
+      );
+      return $form;
     case 'database columns':
       $columns['track_uid'] = array(
         'type' => 'varchar',
@@ -50,52 +58,60 @@ function audiolock_field_settings($op, $field) {
         'sortable' => TRUE,
         'views' => TRUE,
       );
-
       return $columns;
+    case 'save':
+      return array('track_uid', 'track_name');
+  }
+}
+
+/**
+ * Implementation of hook_field().
+ */
+function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
+  switch ($op) {
+    case 'validate':
+    break;
+    case 'sanitize':
+    break;
+    case 'presave':
+      dpm($items);
+      if($file = file_save_upload('field_audiolock_test')) {
+        // Send file to Audiolock.
+        // populate the following array:
+        // array('audolock_name' => FILENAME, 'audiolock_uid' => FILELOCK USER UID);
+      }
     break;
   }
+}
 
+/**
+* Implementation of hook_widget_info().
+*/
+function audiolock_widget_info() {
+  return array(
+    'audiolock_widget' => array(
+      'label' => t('Default upload'),
+      'field types' => array('audiolock'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+  );
 }
 
 /**
  * Implementation of hook_widget().
- *
- * Attach a single form element to the form.
- *
- * CCK core fields only add a stub element and builds
- * the complete item in #process so reusable elements
- * created by hook_elements can be plugged into any
- * module that provides valid $field information.
- *
- * Custom widgets that don't care about using hook_elements
- * can be built out completely at this time.
- *
- * If there are multiple values for this field and CCK is
- * handling multiple values, the content module will call
- * this function as many times as needed.
- *
- * @param $form
- *   the entire form array,
- *   $form['#node'] holds node information
- * @param $form_state
- *   the form_state,
- *   $form_state['values'][$field['field_name']]
- *   holds the field's form values.
- * @param $field
- *   the field array
- * @param $items
- *   array of default values for this field
- * @param $delta
- *   the order of this item in the array of
- *   subelements (0, 1, 2, etc)
- *
- * @return
- *   the form item for a single element for this field
  */
-function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) { 
-  $element['file'] = array(
+function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
+  $form['#attributes']['enctype'] = 'multipart/form-data';
+
+  $element['audiolock_file'] = array(
     '#type' => 'file',
-    '#attributes' => array('class' => 'audiolock-widget'),
+    '#attributes' => array(
+      'class' => 'audiolock-widget',
+    ),
+    '#description' => t('Choose a file to upload to Audiolock.'),
   );
 
   return $element;
@@ -109,7 +125,18 @@ function audiolock_field_formatter_info() {
     'audiolock_stream_link' => array(
       'label' => t('Audiolock stream link'),
       'field types' => array('audiolock'),
-      'multiple values' => CONTENT_HANDLE_MODULE,
+      'multiple values' => CONTENT_HANDLE_CORE,
     ),
   );
+}
+
+/**
+ * Implementation of hook_content_is_empty().
+ *
+ */
+function audiolock_content_is_empty($item, $field) {
+  if (empty($item['audiolock_file'])) {
+    return TRUE;
+  }
+  return FALSE;
 }
