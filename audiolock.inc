@@ -7,7 +7,7 @@
 class DrupalAudiolock {
 
   // Audolock API key.
-  protected $api_key = 'NEED API KEY HERE';
+  protected $api_key = 'db158f7c02f60e89cbb41b73e563d85c-e12202ed252b58eefd5b34afcaaf1d2a';
 
   // Audolock wsdl URL.
   protected $wsdl = 'http://www.audiolock.net/soapServerv2.php?wsdl';
@@ -23,7 +23,7 @@ class DrupalAudiolock {
   /**
    * Request method for all calls to Audiolock API.
    */
-  public function request($method, $params) {
+  protected function request($method, $params) {
     // Add the api_key parameter to requests.
     $params += array('api_key' => $this->api_key);
 
