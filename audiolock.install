@@ -5,14 +5,53 @@
  * Implementation of hook_install().
  */
 function audiolock_install() {
+  drupal_install_schema('audiolock');
+
   drupal_load('module', 'content');
   content_notify('install', 'audiolock');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function audiolock_schema() {
+  $schema['audiolock'] = array(
+  'description' => 'Stores audiolock recipient data for Drupal users.',
+    'fields' => array(
+      'recipient_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The Audiolock recipient ID.",
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The Drupal user ID.",
+      ),
+      'created' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The timestamp when the original request/recipient was created.",
+      ),
+    ),
+    'primary key' => array('recipient_id'),
+  );
+
+  return $schema;
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function audiolock_uninstall() {
+  drupal_uninstall_schema('audiolock');
+
   drupal_load('module', 'content');
   content_notify('uninstall', 'audiolock');
 }

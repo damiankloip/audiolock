@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Audiolock integration.
+ * Audiolock API integration.
  */
 
 /**
@@ -102,14 +102,51 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'sanitize':
     break;
     case 'presave':
-      dpm($items);
-      if($file = file_save_upload('field_audiolock_test')) {
+      dpm($items, 'items');
+      $validators = array(
+        //'audiolock_filetype_validate' => array(),
+      );
+      if($file = file_save_upload('field_audiolock_test', $validators)) {
+        file_move($file, 'audiolock_tmp/' . $file->filename);
+
+        $values = $items[0]['audiolock'];
         // Send file to Audiolock.
+        $params = array(
+          'artist' => $values['track']['track_artist'], // (required)
+          'track_name' => $values['track']['track_name'], // (required)
+          'mix_name' => '', // (optional)
+          'track_file_name' => $file->filename, // (required)
+          'track_file_contents' => drupal_urlencode($file->filepath), // (required)
+          'artwork_file_contents' => '', // (optional)
+          'isrc' => '', // (optional)
+          'release_date' => $values['track']['track_release_date'], // (optional)
+          'encode' => TRUE, // (optional, Needs to be TRUE)
+        );
+        $audiolock_file = audiolock_request()->addTrack($params);
         // populate the following array:
         // array('audolock_name' => FILENAME, 'audiolock_uid' => FILELOCK USER UID);
+        dpm($file);
+      }
+      else {
+        drupal_set_message(t('File upload failed. Your file may exceed the maximum filesize limit.'), 'warning');
       }
     break;
   }
+}
+
+/**
+ * @todo.
+ */
+function audiolock_filetype_validate(&$file) {
+  $errors = array();
+  $extension = pathinfo($file->filepath, PATHINFO_EXTENSION);
+
+  if (empty($extension) || !in_array($extension, audiolock_get_available_file_extensions())) {
+    $errors[] = t('Only the following audio file types are allowed: @extensions.',
+      array('@extensions' => implode(', ', audiolock_get_available_file_extensions())));
+  }
+
+  return $errors;
 }
 
 /**
@@ -134,12 +171,53 @@ function audiolock_widget_info() {
 function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $form['#attributes']['enctype'] = 'multipart/form-data';
 
-  $element['audiolock_file'] = array(
+  $element['audiolock'] = array(
+    '#type' => 'fieldset',
+    '#title' => check_plain($field['widget']['label']),
+  );
+
+  $element['audiolock']['audiolock_file'] = array(
     '#type' => 'file',
     '#attributes' => array(
       'class' => 'audiolock-widget',
     ),
-    '#description' => t('Choose a file to upload to Audiolock.'),
+    '#description' => t('Choose a file to upload to Audiolock. If you already have a track saved below, uploading a new file will overwrite the existing one.'),
+  );
+
+  $element['audiolock']['track'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Track details'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $element['audiolock']['track']['track_artist'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Artist'),
+    '#description' => t('Enter track\'s artist.'),
+    //'#disabled' => TRUE,
+    '#default_value' => $items['track_name'],
+  );
+  $element['audiolock']['track']['track_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Track name'),
+    '#description' => t('The name you want to use for the track.'),
+    //'#disabled' => TRUE,
+    '#default_value' => $items['track_name'],
+  );
+  $element['audiolock']['track']['track_release_date'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Release date'),
+    '#description' => t('The release date of the track.'),
+    //'#disabled' => TRUE,
+    '#default_value' => $items['track_release_date'],
+  );
+  $element['audiolock']['track']['track_uid'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Track uid'),
+    '#description' => t('The unique track uid; This will only ever be assigned by Audiolock.'),
+    '#disabled' => TRUE,
+    '#default_value' => $items['track_uid'] ? $items['track_uid'] : t('Please upload a new track...'),
   );
 
   return $element;
@@ -150,7 +228,7 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  */
 function audiolock_field_formatter_info() {
   return array(
-    'audiolock_stream_link' => array(
+    'stream_link' => array(
       'label' => t('Audiolock stream link'),
       'field types' => array('audiolock'),
       'multiple values' => CONTENT_HANDLE_CORE,
@@ -168,4 +246,95 @@ function audiolock_content_is_empty($item, $field) {
   }
 
   return FALSE;
+}
+
+/**
+ * @todo.
+ *
+ * @param $user
+ * @param $track
+ */
+function audiolock_user_get_download_link($user, $track_uid) {
+  $params = array(
+    'track' => $track_uid,
+    'format' => 3, // 1 - 4.
+    'recipient_id' => audiolock_user_get_recipient_id($user),
+    'expires' => 7, // 7 - 30 available (days).
+  );
+
+  return audiolock_request()->generateDownloadLink($params);
+}
+
+/**
+ * Get a users Audiolock recipient id, or create a new id.
+ *
+ * @param $user
+ *
+ * @return (int)
+ *   A recipient id.
+ */
+function audiolock_user_get_recipient_id($user) {
+  // TODO: Change db field to recipient_id instead of rid, to match audiolock api.
+  $recipient_id = db_result(db_query("SELECT recipient_id FROM {audiolock} WHERE uid = %d", $user->uid));
+  // If we already have a recipient id for this user, return the row.
+  if (!empty($recipient_id)) {
+    // Just return the recipient_id.
+    return $recipient_id;
+  }
+
+  // Create a new recipient if nothing is returned.
+  $params = array(
+    'email' => $user->mail,
+    'name' => $user->name,
+  );
+  $recipient = audiolock_request()->addRecipient($params);
+
+  if (!empty($recipient)) {
+    // Create an object for drupal_write_record.
+    $record = (object) array(
+      'recipient_id' => $recipient->recipient_id,
+      'uid' => $user->uid,
+      'created' => time(),
+    );
+    // Write the record in the audiolock table.
+    drupal_write_record('audiolock', $record);
+
+    return $recipient->recipient_id;
+  }
+
+  // Otherwise, there is some other issue. Just return FALSE.
+  return FALSE;
+}
+
+/**
+ * Return an array of availble file extensions that can be uploaded.
+ */
+function audiolock_get_available_file_extensions() {
+  return array('mp3', 'wav', 'mp4');
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function audiolock_theme() {
+  return array(
+    'audiolock_formatter_stream_link' => array(
+      'arguments' => array('element' => NULL),
+    ),
+  );
+}
+
+/**
+ * Theme an audiolock stream link.
+ * Used as the field display formatter.
+ */
+function theme_audiolock_formatter_stream_link($element) {
+  global $user;
+
+  $node = $element['#node'];
+  $item = $element['#item'];
+
+  $download_link = audiolock_user_get_download_link($user, $item);
+
+  return '<p>' . t('THIS IS A FORMATTER') . '</p>';
 }
