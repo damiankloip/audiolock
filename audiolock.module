@@ -1,6 +1,36 @@
 <?php
 
 /**
+ * @file
+ * Audiolock integration.
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function audiolock_perm() {
+  return array('administer audiolock');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function audiolock_menu() {
+  $items = array();
+
+  $items['admin/settings/audiolock'] = array(
+    'title' => 'Audiolock',
+    'description' => 'Audiolock global settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('audiolock_admin_settings_form'),
+    'access arguments' => array('administer audiolock'),
+    'file' => 'audiolock.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
  * Include the Audiolock API request wrapper class.
  */
 function audiolock_include() {
@@ -11,11 +41,9 @@ function audiolock_include() {
 /**
  * Helper function to make Audiolock API reqests.
  */
-function audiolock_request($method = '', array $params = array()) {
+function audiolock_request() {
   audiolock_include();
-  $client = new DrupalAudiolock();
-
-  return $client->request($method, $params);
+  return new DrupalAudiolock();
 }
 
 /**
@@ -138,5 +166,6 @@ function audiolock_content_is_empty($item, $field) {
   if (empty($item['audiolock_file'])) {
     return TRUE;
   }
+
   return FALSE;
 }

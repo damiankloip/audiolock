@@ -3,14 +3,17 @@
 /**
  * SoapClient wrapper class.
  * Make requests to the Audiolock API using this.
+ *
+ * wsdl: 'http://www.audiolock.net/soapServerv2.php?wsdl'
+ * original api key: 'db158f7c02f60e89cbb41b73e563d85c-e12202ed252b58eefd5b34afcaaf1d2a'
  */
 class DrupalAudiolock {
 
   // Audolock API key.
-  protected $api_key = 'db158f7c02f60e89cbb41b73e563d85c-e12202ed252b58eefd5b34afcaaf1d2a';
+  protected $api_key = trim(variable_get('audiolock_api_key', ''));
 
   // Audolock wsdl URL.
-  protected $wsdl = 'http://www.audiolock.net/soapServerv2.php?wsdl';
+  protected $wsdl = trim(variable_get('audiolock_wsdl', 'http://www.audiolock.net/soapServerv2.php?wsdl'));
 
   // SoapClient storage.
   protected $client;
