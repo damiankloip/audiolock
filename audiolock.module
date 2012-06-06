@@ -116,15 +116,18 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'track_name' => $values['track']['track_name'], // (required)
           'mix_name' => '', // (optional)
           'track_file_name' => $file->filename, // (required)
-          'track_file_contents' => drupal_urlencode($file->filepath), // (required)
+          'track_file_contents' => url($file->filepath), // (required)
           'artwork_file_contents' => '', // (optional)
           'isrc' => '', // (optional)
-          'release_date' => $values['track']['track_release_date'], // (optional)
+          'release_date' => '', // (optional)
           'encode' => TRUE, // (optional, Needs to be TRUE)
         );
-        $audiolock_file = audiolock_request()->addTrack($params);
+        dpm($params, 'params');
+        $audiolock_uid = audiolock_request()->addTrack($params);
+        dpm($audiolock_uid, 'auid');
         // populate the following array:
-        // array('audolock_name' => FILENAME, 'audiolock_uid' => FILELOCK USER UID);
+        $items[0]['audiolock_name'] = $values['track']['track_name'];
+        $items[0]['audiolock_uid'] = $audiolock_uid;
         dpm($file);
       }
       else {
@@ -169,6 +172,8 @@ function audiolock_widget_info() {
  * Implementation of hook_widget().
  */
 function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
+  $audiolock_file_info = !empty($items['track_uid']) ? audiolock_request()->getTrack($items['track_uid']) : NULL;
+
   $form['#attributes']['enctype'] = 'multipart/form-data';
 
   $element['audiolock'] = array(
@@ -195,29 +200,26 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#type' => 'textfield',
     '#title' => t('Artist'),
     '#description' => t('Enter track\'s artist.'),
-    //'#disabled' => TRUE,
-    '#default_value' => $items['track_name'],
+    '#default_value' => $audiolock_file_info ? $audiolock_file_info['artist'] : '',
   );
   $element['audiolock']['track']['track_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Track name'),
     '#description' => t('The name you want to use for the track.'),
-    //'#disabled' => TRUE,
     '#default_value' => $items['track_name'],
   );
-  $element['audiolock']['track']['track_release_date'] = array(
+  /*$element['audiolock']['track']['track_release_date'] = array(
     '#type' => 'textfield',
     '#title' => t('Release date'),
     '#description' => t('The release date of the track.'),
-    //'#disabled' => TRUE,
     '#default_value' => $items['track_release_date'],
-  );
+  );*/
   $element['audiolock']['track']['track_uid'] = array(
     '#type' => 'textfield',
     '#title' => t('Track uid'),
     '#description' => t('The unique track uid; This will only ever be assigned by Audiolock.'),
     '#disabled' => TRUE,
-    '#default_value' => $items['track_uid'] ? $items['track_uid'] : t('Please upload a new track...'),
+    '#default_value' => $audiolock_file_info ? $audiolock_file_info['track_uid'] : t('Please upload a new track...'),
   );
 
   return $element;

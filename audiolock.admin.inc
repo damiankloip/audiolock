@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Admin settings form callback.
+ */
 function audiolock_admin_settings_form() {
   $form = array();
 
