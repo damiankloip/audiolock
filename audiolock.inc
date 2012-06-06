@@ -10,15 +10,17 @@
 class DrupalAudiolock {
 
   // Audolock API key.
-  protected $api_key = trim(variable_get('audiolock_api_key', ''));
+  protected $api_key;
 
   // Audolock wsdl URL.
-  protected $wsdl = trim(variable_get('audiolock_wsdl', 'http://www.audiolock.net/soapServerv2.php?wsdl'));
+  protected $wsdl;
 
   // SoapClient storage.
   protected $client;
 
   public function __construct() {
+    $this->api_key = trim(variable_get('audiolock_api_key', ''));
+    $this->wsdl = trim(variable_get('audiolock_wsdl', 'http://www.audiolock.net/soapServerv2.php?wsdl'));
     // Instantiate our SoapClient class.
     $this->client = new SoapClient($this->wsdl);
   }
@@ -31,12 +33,49 @@ class DrupalAudiolock {
     $params += array('api_key' => $this->api_key);
 
     try {
-      return $this->client->{$method}($params);
+      $response = $this->client->{$method}($params);
+      if (!empty($response->error_code)) {
+        $message = t('Audiolock API error -- Error code: @error_code - @error.', array('@error_code' => $response->error_code, '@error' => $response->error));
+        drupal_set_message($message, 'error');
+        watchdog('audiolock', $message);
+      }
+      elseif (!empty($response->response)) {
+        return unserialize($response->response);
+      }
     }
     catch (SoapFault $sf) {
       watchdog('audiolock', $sf->getMessage());
-      return FALSE;
     }
+
+    return FALSE;
+  }
+
+  /**
+   * @todo.
+   */
+  public function addRecipient(array $params = array()) {
+    return $this->request('addRecipient', $params);
+  }
+
+  /**
+   * @todo.
+   */
+  public function getRecipients(array $params = array()) {
+    return $this->request('getRecipients', $params);
+  }
+
+  /**
+   * @todo.
+   */
+  public function addTrack(array $params = array()) {
+    return $this->request('addTrack', $params);
+  }
+
+  /**
+   * @todo.
+   */
+  public function generateDownloadLink(array $params = array()) {
+    return $this->request('generateDownloadLink', $params);
   }
 
 } // DrupalAudiolock.
