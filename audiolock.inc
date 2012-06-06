@@ -59,7 +59,7 @@ class DrupalAudiolock {
   }
 
   /**
-   * @todo.
+   * Add a recipient (user) to an Audiolock account.
    *
    * @param $params Array:
    * - email (required), the recipients email address
@@ -75,7 +75,7 @@ class DrupalAudiolock {
   }
 
   /**
-   * @todo.
+   * Get all recipients for an Audiolock account.
    *
    * @param $params Array:
    * - match (optional), a string to match against, e.g. “Richard”
@@ -91,13 +91,16 @@ class DrupalAudiolock {
   }
 
   /**
-   * @todo
+   * Get a single recipient from an Audiolock account.
    *
-   * @param $params Array:
-   * - recipient_id (required), id of an existing recipient, see addRecipient
+   * @param $recipient_id:
+   *   The numeric Audiolock recipient id.
+   * 
+   * @return
+   *   Recipient info object.
    */
-  public function getRecipient($params) {
-    return $this->request('getRecipients', $params);
+  public function getRecipient($recipient_id) {
+    return $this->request('getRecipients', array('recipient_id' => $recipient_id));
   }
 
   /**
@@ -142,7 +145,7 @@ class DrupalAudiolock {
   }
 
   /**
-   * @todo.
+   * Generate a download link to a track.
    *
    * @param $params Array:
    * - track (required), the unique identifier for the track, see addTrack
