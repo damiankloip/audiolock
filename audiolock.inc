@@ -104,6 +104,27 @@ class DrupalAudiolock {
   }
 
   /**
+   * Edit a single recipient.
+   *
+   * @param $params
+   *   See addRecipient for parameters.
+   */
+  public function editRecipient(array $params = array()) {
+    return $this->request('editRecipient', $params);
+  }
+
+  /**
+   * Edit a single recipient.
+   *
+   * @param $params
+   *   - recipient_id (required), id or array of ids of existing recipients.
+   *     TODO: Change param to be recipient_id(s).
+   */
+  public function deleteRecipients(array $params = array()) {
+    return $this->request('deleteRecipient', $params);
+  }
+
+  /**
    * Add/upload a track to an Audiolock account.
    *
    * @param $params Array:
