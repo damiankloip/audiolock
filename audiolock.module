@@ -39,11 +39,21 @@ function audiolock_include() {
 }
 
 /**
- * Helper function to make Audiolock API reqests.
+ * Factory function to get Audiolock API reqest class.
+ * Also manages static caching of the class.
+ *
+ * @return
+ *   An instance of DrupalAudiolock.
  */
 function audiolock_request() {
-  audiolock_include();
-  return new DrupalAudiolock();
+  static $request;
+
+  if (empty($request)) {
+    audiolock_include();
+    $request = new DrupalAudiolock();
+  }
+
+  return $request;
 }
 
 /**
