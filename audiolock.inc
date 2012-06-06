@@ -9,10 +9,10 @@
  */
 class DrupalAudiolock {
 
-  // Audolock API key.
+  // Audiolock API key.
   protected $api_key;
 
-  // Audolock wsdl URL.
+  // Audiolock wsdl URL.
   protected $wsdl;
 
   // SoapClient storage.
@@ -132,6 +132,17 @@ class DrupalAudiolock {
    */
   public function getTrack($track_uid) {
     return $this->request('getTrack', array('track_id' => $track_id));
+  }
+
+  /**
+   * Edit info on a single track.
+   *
+   * @param $params
+   *   See addTrack() method for parameters.
+   *   Probably modifying return value from getTrack would be sensible.
+   */
+  public function editTrack(array $params = array()) {
+    return $this->request('editTrack', $params);
   }
 
   /**
