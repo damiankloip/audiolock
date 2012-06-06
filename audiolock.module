@@ -82,7 +82,7 @@ function audiolock_field_settings($op, $field) {
       );
       return $form;
     case 'database columns':
-      $columns['track_uid'] = array(
+      $columns['audiolock_uid'] = array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => FALSE,
@@ -126,7 +126,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'track_name' => $values['track']['track_name'], // (required)
           'mix_name' => '', // (optional)
           'track_file_name' => $file->filename, // (required)
-          'track_file_contents' => url($file->filepath), // (required)
+          'track_file_contents' => url($file->filepath, array('absolute' => TRUE)), // (required)
           'artwork_file_contents' => '', // (optional)
           'isrc' => '', // (optional)
           'release_date' => '', // (optional)
@@ -134,10 +134,13 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
         );
         dpm($params, 'params');
         $audiolock_uid = audiolock_request()->addTrack($params);
-        dpm($audiolock_uid, 'auid');
-        //$items[0]['audiolock_name'] = $values['track']['track_name'];
-        // Add our new uid, ready for the field api to save.
-        $items[0]['audiolock_uid'] = $audiolock_uid;
+        // Only set this if we have a uid, otherwise field is empty.
+        if ($audiolock_uid) {
+          dpm($audiolock_uid, 'auid');
+          //$items[0]['audiolock_name'] = $values['track']['track_name'];
+          // Add our new uid, ready for the field api to save.
+          $items[0]['audiolock_uid'] = $audiolock_uid;
+        }
         dpm($file);
       }
       else {
@@ -256,7 +259,7 @@ function audiolock_field_formatter_info() {
  *
  */
 function audiolock_content_is_empty($item, $field) {
-  if (empty($item['audiolock_file'])) {
+  if (empty($item['audiolock_uid'])) {
     return TRUE;
   }
 
@@ -349,7 +352,7 @@ function theme_audiolock_formatter_stream_link($element) {
   $node = $element['#node'];
   $item = $element['#item'];
 
-  $download_link = audiolock_user_get_download_link($user, $item);
+  $download_link = audiolock_user_get_download_link($user, $item['audiolock_uid']);
 
   return '<p>' . t('THIS IS A FORMATTER') . '</p>';
 }
