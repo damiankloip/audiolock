@@ -160,7 +160,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
         }
         dpm($file);
         // Delete the file after we're done, regardless of whether Audiolock was successful.
-        file_delete($file->filepath);
+        //file_delete($file->filepath);
       }
       else {
         drupal_set_message(t('File upload failed. Your file may exceed the maximum filesize limit.'), 'warning');
