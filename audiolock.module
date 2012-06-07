@@ -128,7 +128,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'track_name' => $values['track']['track_name'], // (required)
           'mix_name' => '', // (optional)
           'track_file_name' => $file->filename, // (required)
-          'track_file_contents' => rawurlencode($base_url . '/' . $file->filepath), // (required)
+          'track_file_contents' => $base_url . '/' . audiolock_encode_path($file->filepath), // (required)
           'artwork_file_contents' => '', // (optional)
           'isrc' => '', // (optional)
           'release_date' => '', // (optional)
@@ -170,6 +170,17 @@ function audiolock_filetype_validate(&$file) {
   }
 
   return $errors;
+}
+
+/**
+ * @todo.
+ */
+function audiolock_encode_path($filepath) {
+  $parts = explode('/', $filepath);
+  $encoded_filename = rawurlencode(array_pop($parts));
+  array_push($parts, $encoded_filename);
+
+  return implode('/', $parts);
 }
 
 /**
