@@ -301,7 +301,7 @@ function audiolock_user_get_download_link($user, $track_uid) {
   $params = array(
     'track' => $track_uid,
     'format' => 3, // 1 - 4.
-    'recipient_id' => audiolock_user_get_recipient_id($user),
+    'recipient_id' => 11434, // TODO: Change this back!!! audiolock_user_get_recipient_id($user),
     'expires' => 7, // 7 - 30 available (days).
   );
 
@@ -379,7 +379,7 @@ function theme_audiolock_formatter_stream_link($element) {
   $item = $element['#item'];
 
   //$download_link = audiolock_user_get_download_link($user, $item['audiolock_uid']);
-  $download_link = audiolock_user_get_download_link(11434, '0O93HSOH7MQ7HB2F');
+  $download_link = audiolock_user_get_download_link($user, '0O93HSOH7MQ7HB2F');
 
   return '<p class="audiolock-download-link">' . l('Download track', $download_link, array('external' => TRUE)) . '</p>';
 }
