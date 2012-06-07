@@ -348,11 +348,13 @@ function audiolock_user_get_download_link($user, $track_uid) {
  *
  * @param $user
  *   A full user object.
+ * @param (bool) $create_new
+ *   Create a new recipient_id if ones doesn't exist.
  *
  * @return (int)
  *   A recipient id.
  */
-function audiolock_user_get_recipient_id($user) {
+function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
   $recipient_id = db_result(db_query("SELECT recipient_id FROM {audiolock} WHERE uid = %d", $user->uid));
   // If we already have a recipient id for this user, return the row.
   if (!empty($recipient_id)) {
@@ -360,25 +362,27 @@ function audiolock_user_get_recipient_id($user) {
     return $recipient_id;
   }
 
-  // Create a new recipient if nothing is returned.
-  // We might want to add more info to this.
-  $params = array(
-    'email' => $user->mail,
-    'name' => $user->name,
-  );
-  $recipient = audiolock_request()->addRecipient($params);
-
-  if (!empty($recipient)) {
-    // Create an object for drupal_write_record.
-    $record = (object) array(
-      'recipient_id' => $recipient->recipient_id,
-      'uid' => $user->uid,
-      'created' => time(),
+  if ($create_new) {
+    // Create a new recipient if nothing is returned.
+    // We might want to add more info to this.
+    $params = array(
+      'email' => $user->mail,
+      'name' => $user->name,
     );
-    // Write the record in the audiolock table.
-    drupal_write_record('audiolock', $record);
+    $recipient = audiolock_request()->addRecipient($params);
 
-    return $recipient->recipient_id;
+    if (!empty($recipient)) {
+      // Create an object for drupal_write_record.
+      $record = (object) array(
+        'recipient_id' => $recipient->recipient_id,
+        'uid' => $user->uid,
+        'created' => time(),
+      );
+      // Write the record in the audiolock table.
+      drupal_write_record('audiolock', $record);
+
+      return $recipient->recipient_id;
+    }
   }
 
   // Otherwise, there is some other issue. Just return FALSE.
@@ -396,20 +400,26 @@ function audiolock_get_available_file_extensions() {
  * Implementation of hook_user().
  */
 function audiolock_user($op, &$edit, &$account, $category = NULL) {
-  switch ($op) {
-    case 'view':
-      dpm($account);
-    break;
-    case 'delete':
-      // Delete the users audiolock account info.
-      $recipient_id = db_result(db_query("SELECT recipient_id from {audiolock} WHERE uid = %d", $account->uid));
-      if ($recipient_id) {
+  $recipient_id = audiolock_user_get_recipient_id($account);
+
+  if ($recipient_id) {
+    switch ($op) {
+      case 'view':
+        // Add a summary for the recipient_id.
+        $account->content['summary']['audiolock'] = array(
+          '#type' => 'user_profile_item', 
+          '#title' => t('Audiolock'), 
+          '#value' => '<p><em>' . t('Audiolock recipient_id') . ':</em> ' . check_plain($recipient_id) . '</p>', 
+          '#attributes' => array('class' => 'audiolock-user-summary'),
+        );
+      break;
+      case 'delete':
         // Delete the users Audiolock recipient account.
         audiolock_request()->deleteRecipients(array('recipient_id' => $recipient_id));
         // Delete users entry from our table.
         db_query("DELETE FROM {audiolock} WHERE uid = %d", $account->uid);
-      }
-    break;
+      break;
+    }
   }
 }
 
