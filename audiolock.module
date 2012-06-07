@@ -67,6 +67,16 @@ function audiolock_request() {
 }
 
 /**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function audiolock_form_content_field_edit_form_alter(&$form, &$form_state) {
+  if ($form['#field']['module'] == 'audiolock') {
+    // Enforce on 1, for field granularity.
+    $form['field']['multiple']['#options'] = array(1);
+  }
+}
+
+/**
  * Implementation of hook_field_info().
  */
 function audiolock_field_info() {
@@ -83,15 +93,16 @@ function audiolock_field_info() {
  */
 function audiolock_field_settings($op, $field) {
   switch ($op) {
-    case 'form':
+    /*case 'form':
       $form = array();
       $form['audiolock_example'] = array(
         '#type' => 'textfield',
         '#label' => 'This is a test field',
         '#description' => 'THSJSDk jkjskjd df djhfdjhf',
       );
-      return $form;
+      return $form;*/
     case 'database columns':
+      // Audiolock unique id hash.
       $columns['audiolock_uid'] = array(
         'type' => 'varchar',
         'length' => 255,
@@ -99,16 +110,10 @@ function audiolock_field_settings($op, $field) {
         'sortable' => TRUE,
         'views' => TRUE,
       );
-      /*$columns['track_name'] = array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => FALSE,
-        'sortable' => TRUE,
-        'views' => TRUE,
-      );*/
+
       return $columns;
     case 'save':
-      return array('track_uid', 'track_name');
+      return array('audiolock_uid');
   }
 }
 
@@ -155,7 +160,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
         }
         dpm($file);
         // Delete the file after we're done, regardless of whether Audiolock was successful.
-        //file_delete($file->filepath);
+        file_delete($file->filepath);
       }
       else {
         drupal_set_message(t('File upload failed. Your file may exceed the maximum filesize limit.'), 'warning');
@@ -219,7 +224,7 @@ function audiolock_widget_info() {
  * Implementation of hook_widget().
  */
 function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $audiolock_file_info = !empty($items['track_uid']) ? audiolock_request()->getTrack($items['track_uid']) : NULL;
+  $audiolock_file_info = !empty($items[$delta]['audiolock_uid']) ? audiolock_request()->getTrack($items[$delta]['audiolock_uid']) : NULL;
 
   $form['#attributes']['enctype'] = 'multipart/form-data';
 
@@ -253,7 +258,7 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#type' => 'textfield',
     '#title' => t('Track name'),
     '#description' => t('The name you want to use for the track.'),
-    '#default_value' => $items['track_name'],
+    '#default_value' => $audiolock_file_info ? $audiolock_file_info['track_name'] : '',
   );
   /*$element['audiolock']['track']['track_release_date'] = array(
     '#type' => 'textfield',
@@ -266,7 +271,7 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#title' => t('Track uid'),
     '#description' => t('The unique track uid; This will only ever be assigned by Audiolock.'),
     '#disabled' => TRUE,
-    '#default_value' => $audiolock_file_info ? $audiolock_file_info['track_uid'] : t('Please upload a new track...'),
+    '#default_value' => $items[$delta]['audiolock_uid'],
   );
 
   return $element;
@@ -317,7 +322,7 @@ function audiolock_download_link_redirect($track_uid) {
     drupal_goto($audiolock_link);
   }
   else {
-    drupal_goto($_GET['q']);
+    drupal_goto();
   }
 
 }
