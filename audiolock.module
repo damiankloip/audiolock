@@ -409,7 +409,7 @@ function audiolock_user($op, &$edit, &$account, $category = NULL) {
         $account->content['summary']['audiolock'] = array(
           '#type' => 'user_profile_item', 
           '#title' => t('Audiolock'), 
-          '#value' => '<p><em>' . t('Audiolock recipient_id') . ':</em> ' . check_plain($recipient_id) . '</p>', 
+          '#value' => '<p><em>' . t('Recipient ID') . ':</em> ' . check_plain($recipient_id) . '</p>', 
           '#attributes' => array('class' => 'audiolock-user-summary'),
         );
       break;
