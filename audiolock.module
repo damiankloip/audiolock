@@ -173,11 +173,17 @@ function audiolock_filetype_validate(&$file) {
 }
 
 /**
- * @todo.
+ * Encode a filepath for Audiolock.
+ * This essentially keeps the path intact, and just encodes the filename.
+ *
+ * @return
+ *   Encoded file path.
  */
 function audiolock_encode_path($filepath) {
   $parts = explode('/', $filepath);
+  // The last part will be the filename, encode that.
   $encoded_filename = rawurlencode(array_pop($parts));
+  // Push it back on the end of the array.
   array_push($parts, $encoded_filename);
 
   return implode('/', $parts);
