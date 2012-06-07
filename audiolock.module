@@ -27,6 +27,16 @@ function audiolock_menu() {
     'file' => 'audiolock.admin.inc',
   );
 
+  $items['audiolock/download/%'] = array(
+    'title' => 'Audiolock Download',
+    'description' => 'Audiolock download link callback.',
+    'page callback' => 'audiolock_download_link_redirect',
+    'page arguments' => array(2),
+    'access callback' => TRUE, // TODO: Proper perms!!
+    //'access arguments' => array('administer audiolock'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -288,6 +298,31 @@ function audiolock_content_is_empty($item, $field) {
 }
 
 /**
+ * Callback for download link, to redirect and create an audiolock
+ * download link. Otherwise, a credit will be used everytime a page with
+ * a link to loaded.
+ *
+ * @param $track_uid
+ */
+function audiolock_download_link_redirect($track_uid) {
+  if (!drupal_valid_token($_GET['token'], 'audiolock_download')) {
+    return;
+  }
+
+  global $user;
+
+  $audiolock_link = audiolock_user_get_download_link($user, $track_uid);
+
+  if ($audiolock_link) {
+    drupal_goto($audiolock_link);
+  }
+  else {
+    drupal_goto($_GET['q']);
+  }
+
+}
+
+/**
  * @todo.
  *
  * @param $user
@@ -379,7 +414,8 @@ function theme_audiolock_formatter_stream_link($element) {
   $item = $element['#item'];
 
   //$download_link = audiolock_user_get_download_link($user, $item['audiolock_uid']);
-  $download_link = audiolock_user_get_download_link($user, '0O93HSOH7MQ7HB2F');
+  $download_link = 'audiolock/download/' . '0O93HSOH7MQ7HB2F';
+  $token = drupal_get_token('audiolock_download');
 
-  return '<p class="audiolock-download-link">' . l('Download track', $download_link, array('external' => TRUE)) . '</p>';
+  return '<p class="audiolock-download-link">' . l('Download track', $download_link, array('query' => array('token' => $token))) . '</p>';
 }
