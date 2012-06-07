@@ -156,6 +156,16 @@ class DrupalAudiolock {
   }
 
   /**
+   * Get info on a single track.
+   *
+   * @param $track_uid (int)
+   *   The unique Audiolock track ID.
+   */
+  public function getTracks() {
+    return $this->request('getTracks');
+  }
+
+  /**
    * Edit info on a single track.
    *
    * @param $params
