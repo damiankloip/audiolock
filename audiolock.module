@@ -393,6 +393,24 @@ function audiolock_get_available_file_extensions() {
 }
 
 /**
+ * Implementation of hook_user().
+ */
+function audiolock_user($op, &$edit, &$account, $category = NULL) {
+  switch ($op) {
+    case 'delete':
+      // Delete the users audiolock account info.
+      $recipient_id = db_result(db_query("SELECT recipient_id from {audiolock} WHERE uid = %d", $account->uid));
+      if ($recipient_id) {
+        // Delete the users Audiolock recipient account.
+        audiolock_request()->deleteRecipients(array('recipient_id' => $recipient_id));
+        // Delete users entry from our table.
+        db_query("DELETE FROM {audiolock} WHERE uid = %d", $account->uid);
+      }
+    break;
+  }
+}
+
+/**
  * Implementation of hook_theme().
  */
 function audiolock_theme() {
