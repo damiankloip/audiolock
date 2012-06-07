@@ -48,8 +48,9 @@ class DrupalAudiolock {
       }
       // We have no errors, and a valid response.
       elseif (!empty($response->response)) {
-        dpm($response, 'response');
-        return unserialize($response->response);
+        $unserialized = unserialize($response->response);
+        // if we unserialize a normal string, we will get an empty return value.
+        return $unserialize ? $unserialized : $response->response;
       }
     }
     catch (SoapFault $sf) {
