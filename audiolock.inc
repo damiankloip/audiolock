@@ -50,7 +50,7 @@ class DrupalAudiolock {
       elseif (!empty($response->response)) {
         $unserialized = unserialize($response->response);
         // if we unserialize a normal string, we will get an empty return value.
-        return $unserialize ? $unserialized : $response->response;
+        return $unserialized ? $unserialized : $response->response;
       }
     }
     catch (SoapFault $sf) {
