@@ -452,7 +452,7 @@ function theme_audiolock_formatter_stream_link($element) {
   $item = $element['#item'];
 
   //$download_link = audiolock_user_get_download_link($user, $item['audiolock_uid']);
-  $download_link = 'audiolock/download/' . '0O93HSOH7MQ7HB2F';
+  $download_link = 'audiolock/download/' . $item['audiolock_uid']; // '0O93HSOH7MQ7HB2F'
   $token = drupal_get_token('audiolock_download');
 
   return '<p class="audiolock-download-link">' . l('Download track', $download_link, array('query' => array('token' => $token))) . '</p>';
