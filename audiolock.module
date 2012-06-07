@@ -117,6 +117,8 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
         //'audiolock_filetype_validate' => array(),
       );
       if($file = file_save_upload('field_audiolock_test', $validators)) {
+        global $base_url;
+
         file_move($file, 'audiolock_tmp/' . $file->filename);
 
         $values = $items[0]['audiolock'];
@@ -126,7 +128,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'track_name' => $values['track']['track_name'], // (required)
           'mix_name' => '', // (optional)
           'track_file_name' => $file->filename, // (required)
-          'track_file_contents' => url($file->filepath, array('absolute' => TRUE)), // (required)
+          'track_file_contents' => $base_url . '/' . rawurlencode($file->filepath), // (required)
           'artwork_file_contents' => '', // (optional)
           'isrc' => '', // (optional)
           'release_date' => '', // (optional)
