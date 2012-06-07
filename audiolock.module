@@ -381,5 +381,5 @@ function theme_audiolock_formatter_stream_link($element) {
   //$download_link = audiolock_user_get_download_link($user, $item['audiolock_uid']);
   $download_link = audiolock_user_get_download_link(11434, '0O93HSOH7MQ7HB2F');
 
-  return '<p class="audiolock-download-link">' . l('Download track', $download_link) . '</p>';
+  return '<p class="audiolock-download-link">' . l('Download track', $download_link, array('external' => TRUE)) . '</p>';
 }
