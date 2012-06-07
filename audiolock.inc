@@ -48,6 +48,7 @@ class DrupalAudiolock {
       }
       // We have no errors, and a valid response.
       elseif (!empty($response->response)) {
+        dpm($response, 'response');
         return unserialize($response->response);
       }
     }
