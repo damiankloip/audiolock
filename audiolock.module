@@ -128,7 +128,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'track_name' => $values['track']['track_name'], // (required)
           'mix_name' => '', // (optional)
           'track_file_name' => $file->filename, // (required)
-          'track_file_contents' => $base_url . '/' . rawurlencode($file->filepath), // (required)
+          'track_file_contents' => rawurlencode($base_url . '/' . $file->filepath), // (required)
           'artwork_file_contents' => '', // (optional)
           'isrc' => '', // (optional)
           'release_date' => '', // (optional)
