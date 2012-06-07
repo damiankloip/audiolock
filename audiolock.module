@@ -226,6 +226,7 @@ function audiolock_widget_info() {
 function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $audiolock_file_info = !empty($items[$delta]['audiolock_uid']) ? audiolock_request()->getTrack($items[$delta]['audiolock_uid']) : NULL;
 
+  // Set this attribute, so we can get the files.
   $form['#attributes']['enctype'] = 'multipart/form-data';
 
   $element['audiolock'] = array(
@@ -252,13 +253,13 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#type' => 'textfield',
     '#title' => t('Artist'),
     '#description' => t('Enter track\'s artist.'),
-    '#default_value' => $audiolock_file_info ? $audiolock_file_info['artist'] : '',
+    '#default_value' => $audiolock_file_info ? $audiolock_file_info->artist : '',
   );
   $element['audiolock']['track']['track_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Track name'),
     '#description' => t('The name you want to use for the track.'),
-    '#default_value' => $audiolock_file_info ? $audiolock_file_info['track_name'] : '',
+    '#default_value' => $audiolock_file_info ? $audiolock_file_info->track_name : '',
   );
   /*$element['audiolock']['track']['track_release_date'] = array(
     '#type' => 'textfield',
@@ -361,8 +362,9 @@ function audiolock_user_get_download_link($user, $track_uid) {
  */
 function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
   $recipient_id = db_result(db_query("SELECT recipient_id FROM {audiolock} WHERE uid = %d", $user->uid));
+
   // If we already have a recipient id for this user, return the row.
-  if (!empty($recipient_id)) {
+  if ($recipient_id) {
     // Just return the recipient_id.
     return $recipient_id;
   }
@@ -374,12 +376,12 @@ function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
       'email' => $user->mail,
       'name' => $user->name,
     );
-    $recipient = audiolock_request()->addRecipient($params);
+    $new_recipient_id = audiolock_request()->addRecipient($params);
 
-    if (!empty($recipient)) {
+    if ($new_recipient_id) {
       // Create an object for drupal_write_record.
       $record = (object) array(
-        'recipient_id' => $recipient->recipient_id,
+        'recipient_id' => $new_recipient_id,
         'uid' => $user->uid,
         'created' => time(),
       );

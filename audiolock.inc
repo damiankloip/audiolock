@@ -153,7 +153,7 @@ class DrupalAudiolock {
    * @param $track_uid (int)
    *   The unique Audiolock track ID.
    */
-  public function getTrack($track_uid) {
+  public function getTrack($track_id) {
     return $this->request('getTrack', array('track_id' => $track_id));
   }
 
