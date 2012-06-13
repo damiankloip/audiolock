@@ -424,6 +424,10 @@ function audiolock_get_available_file_extensions() {
 function audiolock_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
     case 'view':
+      // Return if this setting is FALSE;
+      if (!variable_get('audiolock_user_show_recipient_id', TRUE)) {
+        return;
+      }
       $recipient_id = audiolock_user_get_recipient_id($account);
       if ($recipient_id) {
         // Add a summary for the recipient_id.
@@ -436,6 +440,7 @@ function audiolock_user($op, &$edit, &$account, $category = NULL) {
       }
     break;
     case 'delete':
+      $recipient_id = audiolock_user_get_recipient_id($account);
       if ($recipient_id) {
         // Delete the users Audiolock recipient account.
         audiolock_request()->deleteRecipients(array('recipient_id' => $recipient_id));
