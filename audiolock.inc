@@ -40,8 +40,8 @@ class DrupalAudiolock {
       $response = $this->client->{$method}($params);
       // If we have any errors.
       if (!empty($response->error_code)) {
-        $message = t('Audiolock API error -- Error code: @error_code - @error.',
-          array('@error_code' => $response->error_code, '@error' => $response->error));
+        $message = t('Audiolock API error -- Error code: @error_code - @error. called by @caller',
+          array('@error_code' => $response->error_code, '@error' => $response->error, '@caller' => $method));
 
         drupal_set_message($message, 'error');
         watchdog('audiolock', $message);

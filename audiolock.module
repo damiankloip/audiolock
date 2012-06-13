@@ -27,11 +27,11 @@ function audiolock_menu() {
     'file' => 'audiolock.admin.inc',
   );
 
-  $items['audiolock/download/%'] = array(
+  $items['audiolock/download/%/%'] = array(
     'title' => 'Audiolock Download',
     'description' => 'Audiolock download link callback.',
     'page callback' => 'audiolock_download_link_redirect',
-    'page arguments' => array(2),
+    'page arguments' => array(2, 3),
     'access callback' => TRUE, // TODO: Proper perms!!
     //'access arguments' => array('administer audiolock'),
     'type' => MENU_CALLBACK,
@@ -127,7 +127,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'sanitize':
     break;
     case 'presave':
-      dpm($items, 'items');
+      //dpm($items, 'items');
       $validators = array(
         //'audiolock_filetype_validate' => array(),
       );
@@ -149,16 +149,16 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'release_date' => '', // (optional)
           'encode' => TRUE, // (optional, Needs to be TRUE)
         );
-        dpm($params, 'params');
+        //dpm($params, 'params');
         $audiolock_uid = audiolock_request()->addTrack($params);
         // Only set this if we have a uid, otherwise field is empty.
         if ($audiolock_uid) {
-          dpm($audiolock_uid, 'auid');
+          //dpm($audiolock_uid, 'auid');
           //$items[0]['audiolock_name'] = $values['track']['track_name'];
           // Add our new uid, ready for the field api to save.
           $items[0]['audiolock_uid'] = $audiolock_uid;
         }
-        dpm($file);
+        //dpm($file);
         // Delete the file after we're done, regardless of whether Audiolock was successful.
         //file_delete($file->filepath);
       }
@@ -282,13 +282,23 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  * Implementation of hook_field_formatter_info().
  */
 function audiolock_field_formatter_info() {
-  return array(
-    'stream_link' => array(
-      'label' => t('Audiolock stream link'),
+  $info = array();
+
+  $info['stream_link'] = array(
+    'label' => t('Audiolock stream link'),
+    'field types' => array('audiolock'),
+    'multiple values' => CONTENT_HANDLE_CORE,
+  );
+
+  if (module_exists('mp3player')) {
+    $info['stream_mp3player'] = array(
+      'label' => t('Audiolock stream mp3player'),
       'field types' => array('audiolock'),
       'multiple values' => CONTENT_HANDLE_CORE,
-    ),
-  );
+    );
+  }
+
+  return $info;
 }
 
 /**
@@ -309,23 +319,21 @@ function audiolock_content_is_empty($item, $field) {
  * a link to loaded.
  *
  * @param $track_uid
+ * @param $token
  */
-function audiolock_download_link_redirect($track_uid) {
-  if (!drupal_valid_token($_GET['token'], 'audiolock_download')) {
+function audiolock_download_link_redirect($track_uid, $token) {
+  if (!drupal_valid_token($token, 'audiolock_download')) {
     return;
   }
 
   global $user;
 
-  $audiolock_link = audiolock_user_get_download_link($user, $track_uid);
-
-  if ($audiolock_link) {
+  if ($audiolock_link = audiolock_user_get_download_link($user, $track_uid)) {
     drupal_goto($audiolock_link);
   }
   else {
     drupal_goto();
   }
-
 }
 
 /**
@@ -341,12 +349,19 @@ function audiolock_user_get_download_link($user, $track_uid) {
 
   $params = array(
     'track' => $track_uid,
-    'format' => 3, // 1 - 4.
+    'format' => 1, // 1 - 4. mp3 = 1.
     'recipient_id' => 11434, // TODO: Change this back!!! audiolock_user_get_recipient_id($user),
     'expires' => 7, // 7 - 30 available (days).
   );
 
   return audiolock_request()->generateDownloadLink($params);
+}
+
+function audiolock_format_link($user, $track_uid) {
+  //$download_link = 'audiolock/download/' . 'RK8CYFDZIM8OWEKM'; // '0O93HSOH7MQ7HB2F'
+  $token = drupal_get_token('audiolock_download');
+
+  return url("audiolock/download/0O93HSOH7MQ7HB2F/$token");
 }
 
 /**
@@ -400,7 +415,7 @@ function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
  * Return an array of availble file extensions that can be uploaded.
  */
 function audiolock_get_available_file_extensions() {
-  return array('mp3', 'wav', 'mp4');
+  return array('mp3');
 }
 
 /**
@@ -438,12 +453,16 @@ function audiolock_theme() {
     'audiolock_formatter_stream_link' => array(
       'arguments' => array('element' => NULL),
     ),
+    'audiolock_formatter_stream_mp3player' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
 /**
  * Theme an audiolock stream link.
- * Used as the field display formatter.
+ *
+ * Used as a field display formatter.
  */
 function theme_audiolock_formatter_stream_link($element) {
   global $user;
@@ -451,9 +470,38 @@ function theme_audiolock_formatter_stream_link($element) {
   $node = $element['#node'];
   $item = $element['#item'];
 
-  //$download_link = audiolock_user_get_download_link($user, $item['audiolock_uid']);
-  $download_link = 'audiolock/download/' . $item['audiolock_uid']; // '0O93HSOH7MQ7HB2F'
-  $token = drupal_get_token('audiolock_download');
+  return '<p class="audiolock-download-link">' . l('Download track', audiolock_format_link($user, $item['audiolock_uid']),
+    array('query' => array('token' => $token))) . '</p>';
+}
 
-  return '<p class="audiolock-download-link">' . l('Download track', $download_link, array('query' => array('token' => $token))) . '</p>';
+/**
+ * Theme an audiolock stream mp3player widget.
+ * Provided my the mp3player module (http://drupal.org/project/mp3player).
+ *
+ * Used as a field display formatter.
+ */
+function theme_audiolock_formatter_stream_mp3player($element) {
+  global $user;
+
+  $node = $element['#node'];
+  $item = $element['#item'];
+
+  return theme('mp3player', 'Default', audiolock_format_link($user, $item['audiolock_uid']));
+}
+
+/**
+ * Implementation of hook_cron().
+ *
+ * Cleans up audio files from the audiolock_tmp directory.
+ */
+function audiolock_cron() {
+  $dir = file_directory_path() . '/audiolock_tmp';
+
+  $it = new DirectoryIterator($dir);
+
+  foreach ($it as $fileInfo) {
+    if (!$fileInfo->isDot()) {
+      unlink($fileInfo->getRealPath());
+    }
+  }
 }
