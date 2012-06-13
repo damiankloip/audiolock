@@ -470,8 +470,7 @@ function theme_audiolock_formatter_stream_link($element) {
   $node = $element['#node'];
   $item = $element['#item'];
 
-  return '<p class="audiolock-download-link">' . l('Download track', audiolock_format_link($user, $item['audiolock_uid']),
-    array('query' => array('token' => $token))) . '</p>';
+  return '<p class="audiolock-download-link">' . l('Download track', audiolock_format_link($user, $item['audiolock_uid'])) . '</p>';
 }
 
 /**
