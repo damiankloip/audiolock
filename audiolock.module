@@ -422,11 +422,10 @@ function audiolock_get_available_file_extensions() {
  * Implementation of hook_user().
  */
 function audiolock_user($op, &$edit, &$account, $category = NULL) {
-  $recipient_id = audiolock_user_get_recipient_id($account);
-
-  if ($recipient_id) {
-    switch ($op) {
-      case 'view':
+  switch ($op) {
+    case 'view':
+      $recipient_id = audiolock_user_get_recipient_id($account);
+      if ($recipient_id) {
         // Add a summary for the recipient_id.
         $account->content['summary']['audiolock'] = array(
           '#type' => 'user_profile_item', 
@@ -434,14 +433,16 @@ function audiolock_user($op, &$edit, &$account, $category = NULL) {
           '#value' => '<p><em>' . t('Recipient ID') . ':</em><strong> ' . check_plain($recipient_id) . '</strong></p>', 
           '#attributes' => array('class' => 'audiolock-user-summary'),
         );
-      break;
-      case 'delete':
+      }
+    break;
+    case 'delete':
+      if ($recipient_id) {
         // Delete the users Audiolock recipient account.
         audiolock_request()->deleteRecipients(array('recipient_id' => $recipient_id));
         // Delete users entry from our table.
         db_query("DELETE FROM {audiolock} WHERE uid = %d", $account->uid);
-      break;
-    }
+      }
+    break;
   }
 }
 
