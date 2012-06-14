@@ -131,7 +131,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
       $validators = array(
         //'audiolock_filetype_validate' => array(),
       );
-      if($file = file_save_upload('field_audiolock_test', $validators)) {
+      if($file = file_save_upload($field['field_name'], $validators)) {
         global $base_url;
 
         file_move($file, 'audiolock_tmp/' . $file->filename);
