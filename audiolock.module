@@ -361,7 +361,7 @@ function audiolock_format_link($user, $track_uid) {
   //$download_link = 'audiolock/download/' . 'RK8CYFDZIM8OWEKM'; // '0O93HSOH7MQ7HB2F'
   $token = drupal_get_token('audiolock_download');
 
-  return url("audiolock/download/0O93HSOH7MQ7HB2F/$token");
+  return url("audiolock/download/$track_uid/$token");
 }
 
 /**
