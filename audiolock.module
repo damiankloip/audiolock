@@ -127,7 +127,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'sanitize':
     break;
     case 'presave':
-      //dpm($items, 'items');
+      dpm($items, 'items');
       $validators = array(
         //'audiolock_filetype_validate' => array(),
       );
@@ -149,16 +149,16 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           'release_date' => '', // (optional)
           'encode' => TRUE, // (optional, Needs to be TRUE)
         );
-        //dpm($params, 'params');
+        dpm($params, 'params');
         $audiolock_uid = audiolock_request()->addTrack($params);
         // Only set this if we have a uid, otherwise field is empty.
         if ($audiolock_uid) {
-          //dpm($audiolock_uid, 'auid');
+          dpm($audiolock_uid, 'auid');
           //$items[0]['audiolock_name'] = $values['track']['track_name'];
           // Add our new uid, ready for the field api to save.
           $items[0]['audiolock_uid'] = $audiolock_uid;
         }
-        //dpm($file);
+        dpm($file);
         // Delete the file after we're done, regardless of whether Audiolock was successful.
         //file_delete($file->filepath);
       }
