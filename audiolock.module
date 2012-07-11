@@ -127,7 +127,6 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'sanitize':
     break;
     case 'presave':
-      dpm($items, 'items');
       $validators = array(
         //'audiolock_filetype_validate' => array(),
       );
