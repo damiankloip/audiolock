@@ -346,7 +346,7 @@ function audiolock_user_get_download_link($user, $track_uid) {
   $params = array(
     'track' => $track_uid,
     'format' => 1, // 1 - 4. mp3 = 1.
-    'recipient_id' => 11434, // TODO: Change this back!!! audiolock_user_get_recipient_id($user),
+    'recipient_id' => audiolock_user_get_recipient_id($user),
     'expires' => 7, // 7 - 30 available (days).
   );
 
