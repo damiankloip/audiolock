@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Drupal Audiolock API classes.
+ */
+
+/**
  * SoapClient wrapper class.
  * Make requests to the Audiolock API using this.
  *

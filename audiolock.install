@@ -2,6 +2,10 @@
 
 /**
  * @file
+ * Audiolock install file.
+ */
+
+/**
  * Implementation of hook_install().
  */
 function audiolock_install() {
