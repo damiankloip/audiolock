@@ -292,6 +292,11 @@ function audiolock_field_formatter_info() {
       'field types' => array('audiolock'),
       'multiple values' => CONTENT_HANDLE_CORE,
     );
+    $info['stream_mp3player_and_link'] = array(
+      'label' => t('Audiolock stream mp3player and link'),
+      'field types' => array('audiolock'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    );
   }
 
   return $info;
@@ -458,6 +463,9 @@ function audiolock_theme() {
     'audiolock_formatter_stream_mp3player' => array(
       'arguments' => array('element' => NULL),
     ),
+    'audiolock_formatter_stream_mp3player_and_link' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
@@ -488,6 +496,23 @@ function theme_audiolock_formatter_stream_mp3player($element) {
   $item = $element['#item'];
 
   return theme('mp3player', 'Default', audiolock_format_link($user, $item['audiolock_uid']));
+}
+
+/**
+ * Provide both mp3player stream and links in one formatter.
+ *
+ * Used as a field display formatter.
+ */
+function theme_audiolock_formatter_stream_mp3player_and_link($element) {
+  global $user;
+
+  $node = $element['#node'];
+  $item = $element['#item'];
+
+  $output = theme('audiolock_formatter_stream_link', $element);
+  $output .= theme('audiolock_formatter_stream_mp3player', $element);
+
+  return $output;
 }
 
 /**
