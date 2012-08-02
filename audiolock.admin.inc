@@ -6,6 +6,9 @@
 function audiolock_admin_settings_form() {
   $form = array();
 
+  $content_types = array_map('check_plain', node_get_types('names'));
+
+  // API settings.
   $form['api'] = array(
     '#type' => 'fieldset',
     '#title' => t('API settings'),
@@ -16,6 +19,7 @@ function audiolock_admin_settings_form() {
   $form['api']['audiolock_api_key'] = array(
     '#type' => 'textfield',
     '#title' => t('API key'),
+    '#size' => 80,
     '#description' => t('Enter your Audiolock API key here. Add more description....'),
     '#default_value' => variable_get('audiolock_api_key', ''),
   );
@@ -26,6 +30,29 @@ function audiolock_admin_settings_form() {
     '#default_value' => variable_get('audiolock_wsdl', 'http://www.audiolock.net/soapServerv2.php?wsdl'),
   );
 
+  // Content type settings.
+  $form['content_type'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content type settings'),
+    '#collapsible' => TRUE,
+    '#collpased' => FALSE,
+  );
+
+  $form['content_type']['audiolock_album_content_type'] = array(
+    '#type' => 'radios',
+    '#title' => t('Album content type'),
+    '#options' => $content_types,
+    '#default_value' => variable_get('audiolock_album_content_type', NULL),
+  );
+
+  $form['content_type']['audiolock_track_content_type'] = array(
+    '#type' => 'radios',
+    '#title' => t('Track content type'),
+    '#options' => $content_types,
+    '#default_value' => variable_get('audiolock_track_content_type', NULL),
+  );
+
+  // General settings.
   $form['general'] = array(
     '#type' => 'fieldset',
     '#title' => t('General settings'),
