@@ -15,6 +15,9 @@ define('AUDIOLOCK_ALBUM_TRACK_REF_FIELD', 'field_audiolock_upload');
 function audiolock_album_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($node->type == AUDIOLOCK_ALBUM_CONTENT_TYPE) {
     switch ($op) {
+      case 'view':
+        audiolock_album_add_view_content($node);
+      break;
       case 'insert':
         audiolock_album_write_record($node);
       break;
@@ -88,6 +91,24 @@ function audiolock_album_delete_record($nid) {
 }
 
 /**
+ * Adds our own download link to the node->content.
+ */
+function audiolock_album_add_view_content(&$node) {
+  // Get the audiolock download zip link.
+  $params = array(
+    'tracks' => audiolock_album_get_tracks_from_node_refs($node),
+    'format' => '',
+    'recipient_id' => '',
+    'expires' => '',
+    'zip_name' => '',
+  );
+  // Add our audiolock_album element to the content array.
+  $node->content['audiolock_album'] = array(
+    '#value' => theme('audiolock_album_download_link', array('url' => 'damian/cool')),
+  );
+}
+
+/**
  * Gets the audiolock track uids from audiolock field on referenced track nodes.
  */
 function audiolock_album_get_tracks_from_node_refs($node) {
@@ -110,7 +131,7 @@ function audiolock_album_get_tracks_from_node_refs($node) {
   $tracks = array_filter($tracks);
 
   // Only return an array if we have values.
-  return !empty($tracks) ? $tracks : '';
+  return $tracks;
 }
 
 /**
@@ -146,5 +167,23 @@ function audiolock_album_array_values_from_nested_key(array $array = array(), $k
   }
 
   return $flat;
-} 
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function audiolock_album_theme() {
+  return array(
+   'audiolock_album_download_link' => array(
+      'arguments' => array('url' => NULL),
+    ),
+  );
+}
+
+/**
+ * Theme function to format an audiolock download zip link.
+ */
+function theme_audiolock_album_download_link($element) {
+  return '<div class="audiolock-album-download-link">' . l('Download album', $element['url']) . '</div>';
+}
 
