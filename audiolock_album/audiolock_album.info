@@ -1,0 +1,6 @@
+name = audiolock album
+description = Audiolock album glue code.
+core = 6.x
+package = Audiolock
+
+dependencies[] = audiolock

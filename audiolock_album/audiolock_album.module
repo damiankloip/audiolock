@@ -1,0 +1,150 @@
+<?php
+
+/**
+ * @file
+ * Audiolock album node integration.
+ */
+
+define('AUDIOLOCK_ALBUM_CONTENT_TYPE', variable_get('audiolock_album_content_type', ''));
+define('AUDIOLOCK_ALBUM_TRACK_NODE_FIELD', 'field_track_reference');
+define('AUDIOLOCK_ALBUM_TRACK_REF_FIELD', 'field_audiolock_upload');
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function audiolock_album_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type == AUDIOLOCK_ALBUM_CONTENT_TYPE) {
+    switch ($op) {
+      case 'insert':
+        audiolock_album_write_record($node);
+      break;
+      case 'update':
+        audiolock_album_write_record($node);
+      break;
+      case 'delete':
+        audiolock_album_delete_record($node->nid);
+      break;
+    }
+  }
+
+}
+
+/**
+ * Writes or updates an audiolock record, in both Drupal and audiolock.
+ *
+ * @param $node object
+ *   A full node object.
+ */
+function audiolock_album_write_record($node) {
+  // Start this as false, later it will contain album_id on successful request.
+  $saved_id = FALSE;
+
+  // If we already have an album id, we are updating.
+  if ($album_id = audiolock_album_get_album_id_from_nid($node->nid)) {
+    $album = audiolock_request()->getAlbum($album_id);
+    // Update our node values on the album.
+    $album->name = $node->title;
+    $album->tracks = audiolock_album_get_tracks_from_node_refs($node);
+    $saved_id = audiolock_request()->editAlbum((array) $album);
+  }
+  // Else it's a new node/album.
+  else {
+    $params = array(
+      'name' => $node->title,
+      'tracks' => audiolock_album_get_tracks_from_node_refs($node),
+    );
+
+    if ($saved_id = audiolock_request()->addAlbum($params)) {
+      // Add this reference to the audiolock_album table.
+      audiolock_album_add_album_record($node->nid, $saved_id);
+    }
+  }
+
+}
+
+/**
+ *
+ */
+function audiolock_album_add_album_record($nid, $album_id) {
+  return db_query("INSERT INTO {audiolock_album} SET album_nid = %d, album_id = %d", $nid, $album_id);
+}
+
+/**
+ * Deletes a row from the audiolock_album table.
+ *
+ * @param $nid int
+ *   The node id to delete.
+ */
+function audiolock_album_delete_record($nid) {
+  // Get the album id for this node.
+  $album_id = audiolock_album_get_album_id_from_nid($nid);
+
+  if ($album_id) {
+    // Remove the album from audiolock.
+    audiolock_request()->deleteAlbums($album_id);
+    // Remove the record from the audiolock_album table.
+    db_query("DELETE FROM {audiolock_album} WHERE album_nid = %d", $nid);
+  }
+}
+
+/**
+ * Gets the audiolock track uids from audiolock field on referenced track nodes.
+ */
+function audiolock_album_get_tracks_from_node_refs($node) {
+  $track_refs = audiolock_album_array_values_from_nested_key($node->{AUDIOLOCK_ALBUM_TRACK_NODE_FIELD}, 'nid');
+
+  if (!empty($track_refs)) {
+    $track_nodes = array();
+    foreach ($track_refs as $track_ref) {
+      $track_nodes[$track_ref] = node_load($track_ref);
+    }
+
+    $tracks = array();
+
+    foreach ($track_nodes as $track_node) {
+      $tracks[] = $track_node->{AUDIOLOCK_ALBUM_TRACK_REF_FIELD}[0]['audiolock_uid'];
+    }
+  }
+
+  // Filter out any empty values.
+  $tracks = array_filter($tracks);
+
+  // Only return an array if we have values.
+  return !empty($tracks) ? $tracks : '';
+}
+
+/**
+ * Gets an audiolock album id based on nid.
+ */
+function audiolock_album_get_album_id_from_nid($nid) {
+  return db_result(db_query("SELECT album_id from {audiolock_album} WHERE album_nid = %d", $nid));
+}
+
+/**
+ * Gets an audiolock album object based on nid.
+ */
+function audiolock_album_get_album_from_nid($nid) {
+  $album_id = audiolock_album_get_album_id_from_nid($nid);
+
+  if ($album_id) {
+    return audiolock_request()->getAlbum($album_id);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Returns a flat array of values from an array with a nested key.
+ */
+function audiolock_album_array_values_from_nested_key(array $array = array(), $key) {
+  $flat = array();
+
+  foreach ($array as $item) {
+    if (array_key_exists($key, $item)) {
+      $flat[] = $item[$key];
+    }
+  }
+
+  return $flat;
+} 
+
