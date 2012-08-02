@@ -19,7 +19,7 @@ function audiolock_install() {
  * Implementation of hook_schema().
  */
 function audiolock_schema() {
-  $schema['audiolock'] = array(
+  $schema['audiolock_user'] = array(
   'description' => 'Stores audiolock recipient data for Drupal users.',
     'fields' => array(
       'recipient_id' => array(
@@ -47,7 +47,47 @@ function audiolock_schema() {
     'primary key' => array('recipient_id'),
   );
 
+  $schema['audiolock_album'] = array(
+  'description' => 'Stores audiolock album ids for album nodes.',
+    'fields' => array(
+      'album_nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The Drupal album node ID.",
+      ),
+      'album_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The Audiolock album ID.",
+      ),
+    ),
+    'primary key' => array('album_id'),
+  );
+
   return $schema;
+}
+
+/**
+ * Change the audiolock table to audiolock_user
+ */
+function audiolock_update_6001() {
+  $ret = array();
+  db_rename_table($ret, 'audiolock', 'audiolock_user');
+}
+
+/**
+ * Add audiolock_album table.
+ */
+function audiolock_update_6002() {
+  if (!db_table_exists('audiolock_album')) {
+    $ret = array();
+    $schema = audiolock_schema();
+    db_create_table($ret, 'audiolock_album', $schema['audiolock_album']);
+  }
 }
 
 /**
@@ -55,6 +95,12 @@ function audiolock_schema() {
  */
 function audiolock_uninstall() {
   drupal_uninstall_schema('audiolock');
+
+  variable_del('audiolock_api_key');
+  variable_del('audiolock_wsdl');
+  variable_del('audiolock_album_content_type');
+  variable_del('audiolock_track_content_type');
+  variable_del('audiolock_user_show_recipient_id');
 
   drupal_load('module', 'content');
   content_notify('uninstall', 'audiolock');
