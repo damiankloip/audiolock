@@ -6,6 +6,7 @@
  */
 
 define('AUDIOLOCK_DOWNLOAD_FORMAT', 1); // 1 - 4. mp3 = 1.
+define('AUDIOLOCK_DOWNLOAD_EXPIRY', 7); // 7 - 30 available (days).
 
 /**
  * Implementation of hook_perm().
@@ -354,7 +355,7 @@ function audiolock_user_get_download_link($user, $track_uid) {
     'track' => $track_uid,
     'format' => AUDIOLOCK_DOWNLOAD_FORMAT,
     'recipient_id' => audiolock_user_get_recipient_id($user),
-    'expires' => 7, // 7 - 30 available (days).
+    'expires' => AUDIOLOCK_DOWNLOAD_EXPIRY,
   );
 
   return audiolock_request()->generateDownloadLink($params);
@@ -394,6 +395,7 @@ function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
       'email' => $user->mail,
       'name' => $user->name,
     );
+
     $new_recipient_id = audiolock_request()->addRecipient($params);
 
     if ($new_recipient_id) {
@@ -404,9 +406,9 @@ function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
         'created' => time(),
       );
       // Write the record in the audiolock table.
-      drupal_write_record('audiolock', $record);
+      drupal_write_record('audiolock_user', $record);
 
-      return $recipient->recipient_id;
+      return $record->recipient_id;
     }
   }
 
