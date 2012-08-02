@@ -221,11 +221,11 @@ class DrupalAudiolock {
    * Deletes one or more albums from an Audiolock account.
    *
    * @param $params String/array:
-   *   - tracks (required), unique indentifier or array of unique indentifiers
+   *   - albums (required), unique indentifier or array of unique indentifiers
    *   @see see addAlbum
    */
-  public function deleteAlbums(array $params = array()) {
-    return $this->request('deleteAlbums', $params);
+  public function deleteAlbums($ids) {
+    return $this->request('deleteAlbums', array('albums' => $ids));
   }
 
   /**
