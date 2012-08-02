@@ -9,6 +9,21 @@ define('AUDIOLOCK_ALBUM_CONTENT_TYPE', variable_get('audiolock_album_content_typ
 define('AUDIOLOCK_ALBUM_TRACK_NODE_FIELD', 'field_track_reference');
 define('AUDIOLOCK_ALBUM_TRACK_REF_FIELD', 'field_audiolock_upload');
 
+function audiolock_album_menu() {
+  $items = array();
+
+  $items['audiolock/download-zip/%node/%'] = array(
+    'title' => 'Audiolock Download zip',
+    'description' => 'Audiolock download zip link callback.',
+    'page callback' => 'audiolock_album_download_zip_link_redirect',
+    'page arguments' => array(2, 3),
+    'access callback' => user_is_logged_in(),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
 /**
  * Implementation of hook_nodeapi().
  */
@@ -94,18 +109,42 @@ function audiolock_album_delete_record($nid) {
  * Adds our own download link to the node->content.
  */
 function audiolock_album_add_view_content(&$node) {
-  // Get the audiolock download zip link.
-  $params = array(
-    'tracks' => audiolock_album_get_tracks_from_node_refs($node),
-    'format' => '',
-    'recipient_id' => '',
-    'expires' => '',
-    'zip_name' => '',
-  );
+  $token = drupal_get_token('audiolock_album_download_zip');
+  $path = "audiolock/download-zip/$node->nid/$token";
   // Add our audiolock_album element to the content array.
   $node->content['audiolock_album'] = array(
-    '#value' => theme('audiolock_album_download_link', array('url' => 'damian/cool')),
+    '#value' => theme('audiolock_album_download_link', array('path' => $path)),
   );
+}
+
+/**
+ * Menu callback to do download link redirect.
+ */
+function audiolock_album_download_zip_link_redirect($node, $token) {
+  if (!drupal_valid_token($token, 'audiolock_album_download_zip')) {
+    return;
+  }
+
+  global $user;
+
+  // Get the audiolock download zip link parameters.
+  $params = array(
+    'tracks' => audiolock_album_get_tracks_from_node_refs($node),
+    'format' => AUDIOLOCK_DOWNLOAD_FORMAT,
+    'recipient_id' => audiolock_user_get_recipient_id($user),
+    'expires' => AUDIOLOCK_DOWNLOAD_EXPIRY,
+    'zip_name' => check_plain($node->title),
+  );
+  // Request a download zip link from audiolock.
+  $download_link = audiolock_request()->generateZipDownloadLink($params);
+
+  // Only add our stuff if we have a valid link.
+  if (!empty($download_link) && valid_url($download_link, TRUE)) {
+    drupal_goto($download_link);
+  }
+  else {
+    drupal_goto();
+  }
 }
 
 /**
@@ -175,7 +214,7 @@ function audiolock_album_array_values_from_nested_key(array $array = array(), $k
 function audiolock_album_theme() {
   return array(
    'audiolock_album_download_link' => array(
-      'arguments' => array('url' => NULL),
+      'arguments' => array('path' => NULL),
     ),
   );
 }
@@ -184,6 +223,7 @@ function audiolock_album_theme() {
  * Theme function to format an audiolock download zip link.
  */
 function theme_audiolock_album_download_link($element) {
-  return '<div class="audiolock-album-download-link">' . l('Download album', $element['url']) . '</div>';
+  $link = l('Download album', $element['path']);
+  return '<div class="audiolock-album-download-link">' . $link . '</div>';
 }
 

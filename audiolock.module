@@ -35,8 +35,7 @@ function audiolock_menu() {
     'description' => 'Audiolock download link callback.',
     'page callback' => 'audiolock_download_link_redirect',
     'page arguments' => array(2, 3),
-    'access callback' => TRUE, // TODO: Proper perms!!
-    //'access arguments' => array('administer audiolock'),
+    'access callback' => user_is_logged_in(),
     'type' => MENU_CALLBACK,
   );
 

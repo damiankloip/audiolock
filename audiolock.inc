@@ -291,8 +291,8 @@ class DrupalAudiolock {
    *     generating that the link expires
    *   - zip_name (optional), the name of the zip file when downloaded
    */
-  public function generateDownloadZipLink(array $params = array()) {
-    return $this->request('generateDownloadZipLink', $params);
+  public function generateZipDownloadLink(array $params = array()) {
+    return $this->request('generateZipDownloadLink', $params);
   }
 
 } // DrupalAudiolock.
