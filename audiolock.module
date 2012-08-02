@@ -184,7 +184,7 @@ function audiolock_filetype_validate(&$file) {
 }
 
 /**
- * Encode a filepath for Audiolock.
+ * Encodes a filepath for Audiolock.
  * This essentially keeps the path intact, and just encodes the filename.
  *
  * @return
@@ -377,7 +377,7 @@ function audiolock_format_link($user, $track_uid) {
  *   A recipient id.
  */
 function audiolock_user_get_recipient_id($user, $create_new = TRUE) {
-  $recipient_id = db_result(db_query("SELECT recipient_id FROM {audiolock} WHERE uid = %d", $user->uid));
+  $recipient_id = db_result(db_query("SELECT recipient_id FROM {audiolock_user} WHERE uid = %d", $user->uid));
 
   // If we already have a recipient id for this user, return the row.
   if ($recipient_id) {
@@ -446,7 +446,7 @@ function audiolock_user($op, &$edit, &$account, $category = NULL) {
         // Delete the users Audiolock recipient account.
         audiolock_request()->deleteRecipients(array('recipient_id' => $recipient_id));
         // Delete users entry from our table.
-        db_query("DELETE FROM {audiolock} WHERE uid = %d", $account->uid);
+        db_query("DELETE FROM {audiolock_user} WHERE uid = %d", $account->uid);
       }
     break;
   }
