@@ -119,7 +119,7 @@ function audiolock_album_download_link_view($node) {
   $path = "audiolock/download-zip/$node->nid/$token";
   // This should be passed through t() in l().
   // @see theme_audiolock_album_download_link
-  $text = 'Download album';
+  $text = variable_get('audiolock_album_download_link_text', 'Download album');
 
   return theme('audiolock_album_download_link', array('path' => $path, 'text' => $text));
 }

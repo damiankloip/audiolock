@@ -66,5 +66,13 @@ function audiolock_admin_settings_form() {
     '#default_value' => variable_get('audiolock_user_show_recipient_id', TRUE),
   );
 
+  if (module_exists('audiolock_album')) {
+    $form['general']['audiolock_album_download_link_text'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Text to show for album download link.'),
+      '#default_value' => variable_get('audiolock_album_download_link_text', 'Download album'),
+    );
+  }
+
   return system_settings_form($form);
 }
