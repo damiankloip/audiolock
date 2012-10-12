@@ -480,6 +480,17 @@ function audiolock_user($op, &$edit, &$account, $category = NULL) {
 }
 
 /**
+ * Implements hook_field_access().
+ */
+function audiolock_field_access($op, $field, $account, $node) {
+  // If we are viewing the field; !empty means 'hide' is TRUE.
+  if (($op == 'view') && !empty($node->{$field['field_name']}[0]['hide'])) {
+    // Deny access.
+    return FALSE;
+  }
+}
+
+/**
  * Implementation of hook_theme().
  */
 function audiolock_theme() {
