@@ -547,7 +547,10 @@ function theme_audiolock_formatter_stream_mp3player_and_link($element) {
   $node = $element['#node'];
   $item = $element['#item'];
 
-  $output = theme('audiolock_formatter_stream_link', $element);
+  if (empty($item['hide'])) {
+    $output = theme('audiolock_formatter_stream_link', $element);
+  }
+
   $output .= theme('audiolock_formatter_stream_mp3player', $element);
 
   return $output;
