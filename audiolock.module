@@ -35,7 +35,7 @@ function audiolock_menu() {
     'description' => 'Audiolock download link callback.',
     'page callback' => 'audiolock_download_link_redirect',
     'page arguments' => array(2, 3),
-    'access callback' => user_is_logged_in(),
+    'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
 
@@ -292,8 +292,8 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
 
   $element['audiolock']['hide'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Hide this track'),
-    '#description' => t('Hide this track from users. So no download link will be visible.'),
+    '#title' => t('Hide download link'),
+    '#description' => t('Hides the download link for this track from users.'),
     '#default_value' => $items[$delta]['hide'],
   );
 
@@ -388,7 +388,7 @@ function audiolock_format_link($user, $track_uid) {
   //$download_link = 'audiolock/download/' . 'RK8CYFDZIM8OWEKM'; // '0O93HSOH7MQ7HB2F'
   $token = drupal_get_token('audiolock_download');
 
-  return url("audiolock/download/$track_uid/$token");
+  return url("audiolock/download/$track_uid/$token", array('absolute' => TRUE));
 }
 
 /**
