@@ -104,7 +104,12 @@ function audiolock_field_settings($op, $field) {
         'sortable' => TRUE,
         'views' => TRUE,
       );
-
+      $columns['hide'] = array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'views' => TRUE,
+      );
       return $columns;
     case 'save':
       return array('audiolock_uid');
@@ -123,6 +128,13 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'presave':
       $validators = array(
         //'audiolock_filetype_validate' => array(),
+      );
+
+      // Store an array of the original values if we are just updating the node
+      // but not this field.
+      $orig = array(
+        'audiolock_uid' => $items[0]['audiolock']['track']['track_uid'],
+        'hide' => $items[0]['audiolock']['hide'],
       );
       if($file = file_save_upload($field['field_name'], $validators)) {
         global $base_url;
@@ -148,12 +160,18 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
           //$items[0]['audiolock_name'] = $values['track']['track_name'];
           // Add our new uid, ready for the field api to save.
           $items[0]['audiolock_uid'] = $audiolock_uid;
+          $items[0]['hide'] = $values['hide'];
         }
         // Delete the file after we're done, regardless of whether Audiolock was successful.
         //file_delete($file->filepath);
       }
       else {
-        drupal_set_message(t('File upload failed. Your file may exceed the maximum filesize limit.'), 'warning');
+        // Put the original values where they are expected.
+        $items[0] = $orig;
+        // Only show this message if a file was attempted to be uploaded.
+        if (!empty($_FILES['files']['name'][$field['field_name']])) {
+          drupal_set_message(t('File upload failed. Your file may exceed the maximum filesize limit.'), 'warning');
+        }
       }
     break;
   }
@@ -161,7 +179,7 @@ function audiolock_field($op, &$node, $field, &$items, $teaser, $page) {
 
 /**
  * Validate file extension is compatible with Audiolock.
- * 
+ *
  * @param $file
  *   Drupal file object.
  */
@@ -258,11 +276,25 @@ function audiolock_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#default_value' => $items['track_release_date'],
   );*/
   $element['audiolock']['track']['track_uid'] = array(
+    '#type' => 'value',
+    '#title' => t('Track uid'),
+    '#description' => t('The unique track uid; This will only ever be assigned by Audiolock.'),
+    '#value' => $items[$delta]['audiolock_uid'],
+  );
+  // Dummy field! Just to show the audiolock uid better. above is used for saving.
+  $element['audiolock']['track']['track_uid_display'] = array(
     '#type' => 'textfield',
     '#title' => t('Track uid'),
     '#description' => t('The unique track uid; This will only ever be assigned by Audiolock.'),
-    '#disabled' => TRUE,
     '#default_value' => $items[$delta]['audiolock_uid'],
+    '#disabled' => TRUE,
+  );
+
+  $element['audiolock']['hide'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide this track'),
+    '#description' => t('Hide this track from users. So no download link will be visible.'),
+    '#default_value' => $items[$delta]['hide'],
   );
 
   return $element;
