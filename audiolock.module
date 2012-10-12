@@ -95,14 +95,6 @@ function audiolock_field_info() {
  */
 function audiolock_field_settings($op, $field) {
   switch ($op) {
-    /*case 'form':
-      $form = array();
-      $form['audiolock_example'] = array(
-        '#type' => 'textfield',
-        '#label' => 'This is a test field',
-        '#description' => 'THSJSDk jkjskjd df djhfdjhf',
-      );
-      return $form;*/
     case 'database columns':
       // Audiolock unique id hash.
       $columns['audiolock_uid'] = array(
